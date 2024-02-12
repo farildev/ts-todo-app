@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {FaRegTrashAlt, FaCheck} from "react-icons/fa";
 
 interface Item {
@@ -12,9 +12,23 @@ const TodoView : React.FC = () => {
     const [input , setInput] = useState<string>("");
     const [todos, setTodos] = useState<Item[]>([]);
 
+    useEffect(() => {
+        const storedTodos = localStorage.getItem('todos');
+        if(storedTodos){
+            setTodos(JSON.parse(storedTodos))
+        }
+    },[])
+
     const addTodo = () => {
-        const newTodo : Item = {id: Date.now(), text:input, completed: false}
-        setTodos([...todos,newTodo])
+        const newTodo : Item = {id: todos.length + 1, text:input, completed: false}
+        if(input.length > 0){
+            setTodos([...todos,newTodo])
+            localStorage.setItem('todos', JSON.stringify([...todos, newTodo]));
+            setInput('');            
+        }
+        else{
+            return
+        }
     }
 
     const handleCheck = (id: number) => {
@@ -22,6 +36,7 @@ const TodoView : React.FC = () => {
             todos.map((todo) => {
                 if(todo.id === id){
                     return {...todo, completed : !todo.completed}
+                    
                 }
                 return todo;
             })
@@ -32,6 +47,10 @@ const TodoView : React.FC = () => {
         setTodos(todos.filter((todo) => todo.id !== id))
     }
 
+    const deleteAllTodos = () =>{
+        setTodos([])
+        localStorage.clear();
+    }
 
   return (
     <div className='w-[700px] border border-gray-400/20 text-white p-5 rounded-md'>
@@ -43,7 +62,10 @@ const TodoView : React.FC = () => {
             <button onClick={() => addTodo()} className='bg-white text-black py-2 px-5 rounded-md outline-none border-none'>Add</button>
         </div>
         <div className='w-full flex flex-col gap-5'>
-            <h3 className='mt-10 font-medium text-md px-2'>Daily Missions</h3>
+            <div className='mt-10 flex items-center justify-between'>
+                <h3 className='font-medium text-md px-2'>Daily Missions</h3>
+                <button onClick={() => deleteAllTodos()} className='bg-white text-black py-2 px-5 rounded-md text-sm'>Delete All</button>
+            </div>
             <div id='todos-area' className='flex flex-col gap-3 h-[300px] overflow-y-scroll'>
                 {
                     todos.map((todo) => (
